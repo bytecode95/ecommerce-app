@@ -1,0 +1,176 @@
+erDiagram
+  USERS ||--o{ USER_ROLES : has
+  ROLES ||--o{ USER_ROLES : assigned_to
+  ROLES ||--o{ ROLE_PERMISSIONS : grants
+  PERMISSIONS ||--o{ ROLE_PERMISSIONS : included_in
+  USERS ||--o{ OTP_VERIFICATIONS : requests
+  USERS ||--o{ REFRESH_TOKENS : holds
+  CATEGORIES ||--o{ PRODUCTS : contains
+  PRODUCTS ||--o{ PRODUCT_IMAGES : has
+  USERS ||--o{ CARTS : owns
+  CARTS ||--o{ CART_ITEMS : contains
+  PRODUCTS ||--o{ CART_ITEMS : referenced_by
+  USERS ||--o{ ORDERS : places
+  ORDERS ||--o{ ORDER_ITEMS : contains
+  PRODUCTS |o--o{ ORDER_ITEMS : snapshot_of
+  ORDERS ||--|| INVOICES : generates
+  USERS |o--o{ IDEMPOTENCY_KEYS : requests
+  USERS |o--o{ NOTIFICATION_LOGS : receives
+
+  USERS {
+    char id PK
+    string user_type
+    string name
+    string email
+    string phone
+    string password_hash
+    string status
+    datetime created_at
+    datetime updated_at
+    datetime deleted_at
+  }
+  ROLES {
+    char id PK
+    string name
+    string description
+    boolean is_system
+    datetime created_at
+    datetime updated_at
+  }
+  PERMISSIONS {
+    char id PK
+    string key
+    string description
+    datetime created_at
+  }
+  ROLE_PERMISSIONS {
+    char role_id PK_FK
+    char permission_id PK_FK
+    datetime created_at
+  }
+  USER_ROLES {
+    char user_id PK_FK
+    char role_id PK_FK
+    char assigned_by FK
+    datetime assigned_at
+  }
+  OTP_VERIFICATIONS {
+    char id PK
+    char user_id FK
+    string purpose
+    string otp_hash
+    datetime expires_at
+    int attempt_count
+    int max_attempts
+    string status
+    datetime last_sent_at
+    datetime created_at
+  }
+  REFRESH_TOKENS {
+    char id PK
+    char user_id FK
+    string token_hash
+    char family_id
+    datetime expires_at
+    datetime revoked_at
+    char replaced_by_token_id
+    string user_agent
+    string ip_address
+    datetime created_at
+  }
+  CATEGORIES {
+    char id PK
+    string name
+    string slug
+    string description
+    string status
+    datetime created_at
+    datetime updated_at
+  }
+  PRODUCTS {
+    char id PK
+    char category_id FK
+    string name
+    string description
+    string sku
+    decimal price
+    int stock
+    string status
+    datetime created_at
+    datetime updated_at
+    datetime deleted_at
+  }
+  PRODUCT_IMAGES {
+    char id PK
+    char product_id FK
+    string s3_key
+    string url
+    int sort_order
+    datetime created_at
+  }
+  CARTS {
+    char id PK
+    char user_id FK
+    string status
+    datetime created_at
+    datetime updated_at
+  }
+  CART_ITEMS {
+    char id PK
+    char cart_id FK
+    char product_id FK
+    int quantity
+    datetime created_at
+    datetime updated_at
+  }
+  ORDERS {
+    char id PK
+    char user_id FK
+    string status
+    decimal subtotal
+    decimal total
+    string idempotency_key
+    datetime created_at
+    datetime updated_at
+  }
+  ORDER_ITEMS {
+    char id PK
+    char order_id FK
+    char product_id FK
+    string product_name
+    string sku
+    decimal unit_price
+    int quantity
+    decimal subtotal
+    datetime created_at
+  }
+  INVOICES {
+    char id PK
+    char order_id FK
+    string invoice_number
+    string status
+    string s3_key
+    string url
+    datetime generated_at
+    datetime created_at
+    datetime updated_at
+  }
+  IDEMPOTENCY_KEYS {
+    char id PK
+    string key_value
+    char user_id FK
+    string endpoint
+    string status
+    datetime created_at
+    datetime expires_at
+  }
+  NOTIFICATION_LOGS {
+    char id PK
+    char user_id FK
+    string channel
+    string purpose
+    string recipient
+    string status
+    string provider_message_id
+    datetime created_at
+  }

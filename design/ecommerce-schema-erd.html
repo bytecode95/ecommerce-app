@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>E-commerce database ER diagram</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #ffffff;
+    color: #1a1a1a;
+    margin: 0;
+    padding: 32px;
+  }
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+  p.subtitle {
+    color: #666;
+    font-size: 14px;
+    margin: 0 0 20px;
+  }
+  .toolbar {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 8px;
+  }
+  button {
+    font-size: 13px;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid #d0d0d0;
+    background: #f7f7f7;
+    cursor: pointer;
+  }
+  button:hover {
+    background: #ececec;
+  }
+  #erd {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 24px;
+    overflow: auto;
+  }
+  @media print {
+    .toolbar { display: none; }
+    body { padding: 0; }
+    #erd { border: none; }
+  }
+</style>
+</head>
+<body>
+  <h1>E-commerce platform — database ER diagram</h1>
+  <p class="subtitle">Generated from schema.sql — 17 tables across auth/RBAC, catalog, cart, and order modules</p>
+  <div class="toolbar">
+    <button onclick="window.print()">Print / save as PDF</button>
+    <button onclick="downloadSvg()">Download as SVG</button>
+  </div>
+  <div id="erd"></div>
+
+  <script type="module">
+    import mermaid from 'https://esm.sh/mermaid@11/dist/mermaid.esm.min.mjs';
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'base',
+      themeVariables: {
+        fontSize: '13px',
+        primaryColor: '#eef2ff',
+        primaryBorderColor: '#6366f1',
+        primaryTextColor: '#1a1a1a',
+        lineColor: '#888888',
+        textColor: '#1a1a1a',
+      },
+    });
+
+    const source = `erDiagram
+  USERS ||--o{ USER_ROLES : has
+  ROLES ||--o{ USER_ROLES : assigned_to
+  ROLES ||--o{ ROLE_PERMISSIONS : grants
+  PERMISSIONS ||--o{ ROLE_PERMISSIONS : included_in
+  USERS ||--o{ OTP_VERIFICATIONS : requests
+  USERS ||--o{ REFRESH_TOKENS : holds
+  CATEGORIES ||--o{ PRODUCTS : contains
+  PRODUCTS ||--o{ PRODUCT_IMAGES : has
+  USERS ||--o{ CARTS : owns
+  CARTS ||--o{ CART_ITEMS : contains
+  PRODUCTS ||--o{ CART_ITEMS : referenced_by
+  USERS ||--o{ ORDERS : places
+  ORDERS ||--o{ ORDER_ITEMS : contains
+  PRODUCTS |o--o{ ORDER_ITEMS : snapshot_of
+  ORDERS ||--|| INVOICES : generates
+  USERS |o--o{ IDEMPOTENCY_KEYS : requests
+  USERS |o--o{ NOTIFICATION_LOGS : receives
+
+  USERS {
+    char id PK
+    string user_type
+    string name
+    string email
+    string phone
+    string password_hash
+    string status
+    datetime created_at
+    datetime updated_at
+    datetime deleted_at
+  }
+  ROLES {
+    char id PK
+    string name
+    string description
+    boolean is_system
+    datetime created_at
+    datetime updated_at
+  }
+  PERMISSIONS {
+    char id PK
+    string key
+    string description
+    datetime created_at
+  }
+  ROLE_PERMISSIONS {
+    char role_id PK_FK
+    char permission_id PK_FK
+    datetime created_at
+  }
+  USER_ROLES {
+    char user_id PK_FK
+    char role_id PK_FK
+    char assigned_by FK
+    datetime assigned_at
+  }
+  OTP_VERIFICATIONS {
+    char id PK
+    char user_id FK
+    string purpose
+    string otp_hash
+    datetime expires_at
+    int attempt_count
+    int max_attempts
+    string status
+    datetime last_sent_at
+    datetime created_at
+  }
+  REFRESH_TOKENS {
+    char id PK
+    char user_id FK
+    string token_hash
+    char family_id
+    datetime expires_at
+    datetime revoked_at
+    char replaced_by_token_id
+    string user_agent
+    string ip_address
+    datetime created_at
+  }
+  CATEGORIES {
+    char id PK
+    string name
+    string slug
+    string description
+    string status
+    datetime created_at
+    datetime updated_at
+  }
+  PRODUCTS {
+    char id PK
+    char category_id FK
+    string name
+    string description
+    string sku
+    decimal price
+    int stock
+    string status
+    datetime created_at
+    datetime updated_at
+    datetime deleted_at
+  }
+  PRODUCT_IMAGES {
+    char id PK
+    char product_id FK
+    string s3_key
+    string url
+    int sort_order
+    datetime created_at
+  }
+  CARTS {
+    char id PK
+    char user_id FK
+    string status
+    datetime created_at
+    datetime updated_at
+  }
+  CART_ITEMS {
+    char id PK
+    char cart_id FK
+    char product_id FK
+    int quantity
+    datetime created_at
+    datetime updated_at
+  }
+  ORDERS {
+    char id PK
+    char user_id FK
+    string status
+    decimal subtotal
+    decimal total
+    string idempotency_key
+    datetime created_at
+    datetime updated_at
+  }
+  ORDER_ITEMS {
+    char id PK
+    char order_id FK
+    char product_id FK
+    string product_name
+    string sku
+    decimal unit_price
+    int quantity
+    decimal subtotal
+    datetime created_at
+  }
+  INVOICES {
+    char id PK
+    char order_id FK
+    string invoice_number
+    string status
+    string s3_key
+    string url
+    datetime generated_at
+    datetime created_at
+    datetime updated_at
+  }
+  IDEMPOTENCY_KEYS {
+    char id PK
+    string key_value
+    char user_id FK
+    string endpoint
+    string status
+    datetime created_at
+    datetime expires_at
+  }
+  NOTIFICATION_LOGS {
+    char id PK
+    char user_id FK
+    string channel
+    string purpose
+    string recipient
+    string status
+    string provider_message_id
+    datetime created_at
+  }`;
+
+    const { svg } = await mermaid.render('erd-svg', source);
+    document.getElementById('erd').innerHTML = svg;
+
+    window.downloadSvg = function () {
+      const svgEl = document.querySelector('#erd svg');
+      const serializer = new XMLSerializer();
+      let svgString = serializer.serializeToString(svgEl);
+      if (!svgString.includes('xmlns=')) {
+        svgString = svgString.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+      }
+      const blob = new Blob([svgString], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'ecommerce-schema-erd.svg';
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+  </script>
+</body>
+</html>
